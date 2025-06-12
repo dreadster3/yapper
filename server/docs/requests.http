@@ -1,0 +1,24 @@
+# @curl-no-buffer
+# @accept chunked
+POST http://localhost:8000/api/v1/chat/stream
+Content-Type: application/json
+Accept: text/event-stream
+Cache-Control: no-cache
+
+{
+    "model": "deepseek-r1:1.5b",
+    "messages": [
+        {
+            "role": "user",
+            "content": "Hello how are you?"
+        },
+        {
+            "role": "assistant",
+            "content": "Hello! I'm just a virtual assistant, so I don't have feelings, but I'm here and ready to help you with whatever you need. How are you doing today? 😊"
+        },
+        {
+            "role": "user",
+            "content": "Give me 10 fun fact about cats"
+        }
+    ]
+}
