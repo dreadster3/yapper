@@ -8,4 +8,5 @@ type Message struct {
 type ChatMessage struct {
 	Model    string    `json:"model"`
 	Messages []Message `json:"messages"`
+	Think    bool      `json:"think"`
 }

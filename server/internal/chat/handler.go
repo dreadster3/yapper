@@ -43,11 +43,10 @@ func (ch *chatHandler) Stream(c *gin.Context) {
 		}
 	}
 
-	think := false
 	request := &api.ChatRequest{
 		Model:    body.Model,
 		Messages: messages,
-		Think:    &think,
+		Think:    &body.Think,
 	}
 
 	eventName := "message"
