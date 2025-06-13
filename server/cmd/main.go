@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/dreadster3/yapper/server/internal/chat"
+	"github.com/dreadster3/yapper/server/internal/platform/providers"
 	"github.com/dreadster3/yapper/server/internal/platform/router"
 )
 
@@ -17,7 +18,12 @@ func init() {
 func main() {
 	flag.Parse()
 
-	chatHandler := chat.NewChatHandler()
+	providers, err := providers.SetupProviders("http://localhost:11434")
+	if err != nil {
+		panic(err)
+	}
+
+	chatHandler := chat.NewChatHandler(providers)
 
 	engine := router.SetupRouter(chatHandler)
 	engine.Run(fmt.Sprintf(":%d", port))

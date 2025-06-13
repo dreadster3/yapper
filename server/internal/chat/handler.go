@@ -1,22 +1,23 @@
 package chat
 
 import (
+	"errors"
 	"io"
-	"net/http"
-	"net/url"
 
+	"github.com/dreadster3/yapper/server/internal/platform/providers"
 	"github.com/gin-gonic/gin"
-	"github.com/ollama/ollama/api"
 )
 
 type ChatHandler interface {
 	Stream(c *gin.Context)
 }
 
-type chatHandler struct{}
+type chatHandler struct {
+	providers map[string]providers.Provider
+}
 
-func NewChatHandler() ChatHandler {
-	return &chatHandler{}
+func NewChatHandler(providers map[string]providers.Provider) ChatHandler {
+	return &chatHandler{providers: providers}
 }
 
 func (ch *chatHandler) Stream(c *gin.Context) {
@@ -28,41 +29,34 @@ func (ch *chatHandler) Stream(c *gin.Context) {
 		return
 	}
 
-	url, err := url.Parse("http://localhost:11434")
-	if err != nil {
-		c.AbortWithError(400, err)
+	provider, ok := ch.providers[body.Provider]
+	if !ok {
+		c.AbortWithError(400, errors.New("provider not found"))
 		return
 	}
-	client := api.NewClient(url, http.DefaultClient)
 
-	messages := make([]api.Message, len(body.Messages))
+	messages := make([]providers.Message, len(body.Messages))
 	for i, message := range body.Messages {
-		messages[i] = api.Message{
-			Role:    message.Role,
+		messages[i] = providers.Message{
+			Role:    providers.ParseRole(message.Role),
 			Content: message.Content,
 		}
 	}
 
-	request := &api.ChatRequest{
-		Model:    body.Model,
-		Messages: messages,
-		Think:    &body.Think,
-	}
-
 	eventName := "message"
 	c.Stream(func(w io.Writer) bool {
-		client.Chat(ctx, request, func(response api.ChatResponse) error {
-			if response.Message.Content != "" {
-				if response.Message.Content == "<think>" {
+		provider.Chat(ctx, body.Model, messages, func(message providers.Message) error {
+			if message.Content != "" {
+				if message.Content == "<think>" {
 					eventName = "thinking"
 					return nil
 				}
-				if response.Message.Content == "</think>" {
+				if message.Content == "</think>" {
 					eventName = "message"
 					return nil
 				}
 
-				c.SSEvent(eventName, response.Message.Content)
+				c.SSEvent(eventName, message.Content)
 			}
 			return nil
 		})

@@ -7,7 +7,7 @@ Cache-Control: no-cache
 
 {
     "model": "deepseek-r1:1.5b",
-    "think": true,
+    "provider": "ollama",
     "messages": [
         {
             "role": "user",
