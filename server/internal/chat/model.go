@@ -6,8 +6,8 @@ type Message struct {
 }
 
 type ChatMessage struct {
-	Provider string    `json:"provider"`
-	Model    string    `json:"model"`
-	Messages []Message `json:"messages"`
+	Provider string    `json:"provider" binding:"required,registered_provider"`
+	Model    string    `json:"model" binding:"required"`
+	Messages []Message `json:"messages" binding:"required"`
 	Think    bool      `json:"think"`
 }

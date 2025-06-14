@@ -6,6 +6,7 @@ import (
 
 	"github.com/dreadster3/yapper/server/internal/platform/providers"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 type ChatHandler interface {
@@ -25,13 +26,19 @@ func (ch *chatHandler) Stream(c *gin.Context) {
 
 	var body ChatMessage
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.AbortWithError(400, err)
+		c.Error(err)
+		return
+	}
+
+	validator := validator.New()
+	if err := validator.Struct(body); err != nil {
+		c.Error(err)
 		return
 	}
 
 	provider, ok := ch.providers[body.Provider]
 	if !ok {
-		c.AbortWithError(400, errors.New("provider not found"))
+		c.Error(errors.New("provider not found"))
 		return
 	}
 

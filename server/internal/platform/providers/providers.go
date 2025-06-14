@@ -1,6 +1,10 @@
 package providers
 
-import "context"
+import (
+	"context"
+
+	"github.com/go-playground/validator/v10"
+)
 
 type Message struct {
 	Role     Role
@@ -24,4 +28,11 @@ func SetupProviders(ollamUrl string) (map[string]Provider, error) {
 	providers["ollama"] = ollamaProvider
 
 	return providers, nil
+}
+
+func ValidateRegisteredProvider(providers map[string]Provider) validator.Func {
+	return func(fieldLevel validator.FieldLevel) bool {
+		provider, ok := providers[fieldLevel.Field().String()]
+		return ok && provider != nil
+	}
 }
