@@ -11,3 +11,8 @@ type ChatMessage struct {
 	Messages []Message `json:"messages" binding:"required"`
 	Think    bool      `json:"think"`
 }
+
+type Chat struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}

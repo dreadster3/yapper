@@ -15,7 +15,8 @@ func ErrorMiddleware(translator ut.Translator) gin.HandlerFunc {
 
 		err := c.Errors.Last()
 		if err != nil {
-			status := http.StatusInternalServerError
+			status := c.Writer.Status()
+
 			var message any
 			message = err.Error()
 			if err.IsType(gin.ErrorTypeBind) {
@@ -27,6 +28,10 @@ func ErrorMiddleware(translator ut.Translator) gin.HandlerFunc {
 				status = http.StatusBadRequest
 				translations := validationError.Translate(translator)
 				message = translations
+			}
+
+			if status < 300 {
+				status = http.StatusInternalServerError
 			}
 
 			c.JSON(status, gin.H{

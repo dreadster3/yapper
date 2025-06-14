@@ -3,6 +3,7 @@ package chat
 import (
 	"errors"
 	"io"
+	"net/http"
 
 	"github.com/dreadster3/yapper/server/internal/platform/providers"
 	"github.com/gin-gonic/gin"
@@ -11,6 +12,7 @@ import (
 
 type ChatHandler interface {
 	Stream(c *gin.Context)
+	Create(c *gin.Context)
 }
 
 type chatHandler struct {
@@ -70,5 +72,17 @@ func (ch *chatHandler) Stream(c *gin.Context) {
 
 		c.SSEvent("done", "")
 		return false
+	})
+}
+
+func (ch *chatHandler) Create(c *gin.Context) {
+	var chat Chat
+	if err := c.ShouldBindJSON(&chat); err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
 	})
 }

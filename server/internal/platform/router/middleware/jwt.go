@@ -10,6 +10,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const (
+	UserIdContextKey     = "user_id"
+	UserClaimsContextKey = "user_claims"
+)
+
 type JWTMiddleware struct {
 	jwksURL  string
 	keyFunc  jwt.Keyfunc
@@ -82,8 +87,8 @@ func (m *JWTMiddleware) Middleware() gin.HandlerFunc {
 			}
 		}
 
-		c.Set("user_claims", claims)
-		c.Set("user_id", claims["sub"])
+		c.Set(UserIdContextKey, claims["sub"])
+		c.Set(UserClaimsContextKey, claims)
 		c.Next()
 	}
 }

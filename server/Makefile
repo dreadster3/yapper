@@ -13,6 +13,6 @@ docker:
 
 .PHONY: run
 run:
-	go run ./cmd/server -port 8000
+	go run ./cmd/server
 
 

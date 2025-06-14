@@ -1,40 +1,88 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"maps"
+	"os"
 	"slices"
+	"strconv"
 
 	"github.com/dreadster3/yapper/server/internal/chat"
+	"github.com/dreadster3/yapper/server/internal/platform/database"
 	"github.com/dreadster3/yapper/server/internal/platform/providers"
 	"github.com/dreadster3/yapper/server/internal/platform/router"
 	"github.com/dreadster3/yapper/server/internal/platform/router/middleware"
-	"github.com/dreadster3/yapper/server/internal/user"
+	"github.com/dreadster3/yapper/server/internal/profile"
 	"github.com/gin-gonic/gin/binding"
 	en_locale "github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 	en_translations "github.com/go-playground/validator/v10/translations/en"
+	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
 
-var port int
+var (
+	port   int
+	jwkUrl string
+	dbHost string
+	dbPort int
+	dbUser string
+	dbPass string
+)
 
-func init() {
-	flag.IntVar(&port, "port", 8000, "Port to listen on")
+func GetEnvDefault(key string, defaultValue string) string {
+	if val, ok := os.LookupEnv(key); ok {
+		return val
+	}
+	return defaultValue
+}
+
+func GetEnvIntDefault(key string, defaultValue int) int {
+	if val, ok := os.LookupEnv(key); ok {
+		if intVal, err := strconv.Atoi(val); err != nil {
+			return intVal
+		}
+	}
+
+	return defaultValue
+}
+
+func initFlags() {
+	flag.IntVar(&port, "port", GetEnvIntDefault("PORT", 8000), "Port to listen on")
+	flag.StringVar(&jwkUrl, "jwk-url", os.Getenv("JWK_URL"), "The URL to the JWKS endpoint")
+	flag.StringVar(&dbHost, "db-host", GetEnvDefault("DB_HOST", "mongo"), "The hostname of the database")
+	flag.IntVar(&dbPort, "db-port", GetEnvIntDefault("DB_PORT", 27017), "The port of the database")
+	flag.StringVar(&dbUser, "db-user", os.Getenv("DB_USER"), "The username of the database")
+	flag.StringVar(&dbPass, "db-pass", os.Getenv("DB_PASS"), "The password of the database")
+	flag.Parse()
 }
 
 func _main() error {
-	flag.Parse()
+	godotenv.Load()
+	initFlags()
 
 	logger, err := zap.NewProduction()
 	if err != nil {
 		return err
 	}
+	if os.Getenv("GIN_MODE") != "release" {
+		logger = zap.Must(zap.NewDevelopment())
+	}
+	defer logger.Sync()
 
-	userRepository := user.NewMongoRepository(logger.With(zap.String("repository", "user")))
-	userHandler := user.NewUserHandler(userRepository)
+	ctx := context.Background()
+
+	db, closeDatabase, err := database.ConnectDatabase(ctx, dbHost, dbPort, dbUser, dbPass)
+	if err != nil {
+		return err
+	}
+	defer closeDatabase(ctx)
+
+	profileRepository := profile.NewProfileRepository(db, logger.With(zap.String("repository", "profile")))
+	profileHandler := profile.NewProfileHandler(profileRepository)
 
 	registeredProviders, err := providers.SetupProviders("http://localhost:11434")
 	if err != nil {
@@ -44,7 +92,7 @@ func _main() error {
 	chatHandler := chat.NewChatHandler(registeredProviders)
 
 	jwtConfig := &middleware.JWTConfig{
-		JWKSUrl: "http://localhost:9000/application/o/yapper/jwks/",
+		JWKSUrl: jwkUrl,
 	}
 	locale := en_locale.New()
 	translator := ut.New(locale, locale)
@@ -53,7 +101,7 @@ func _main() error {
 		return fmt.Errorf("translator for 'en' not found")
 	}
 
-	engine, err := router.SetupRouter(en_translator, jwtConfig, chatHandler, userHandler)
+	engine, err := router.SetupRouter(en_translator, jwtConfig, chatHandler, profileHandler)
 	if err != nil {
 		return err
 	}
