@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/dreadster3/yapper/server/internal/platform/auth"
 	"github.com/gin-gonic/gin"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
@@ -28,6 +29,10 @@ func ErrorMiddleware(translator ut.Translator) gin.HandlerFunc {
 				status = http.StatusBadRequest
 				translations := validationError.Translate(translator)
 				message = translations
+			}
+
+			if errors.Is(err, auth.ErrForbidden) {
+				status = http.StatusForbidden
 			}
 
 			if status < 300 {

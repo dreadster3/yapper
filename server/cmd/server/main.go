@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/dreadster3/yapper/server/internal/chat"
+	"github.com/dreadster3/yapper/server/internal/messages"
 	"github.com/dreadster3/yapper/server/internal/platform/database"
 	"github.com/dreadster3/yapper/server/internal/platform/providers"
 	"github.com/dreadster3/yapper/server/internal/platform/router"
@@ -92,6 +93,9 @@ func _main() error {
 	chatRepository := chat.NewChatRepository(db, logger.With(zap.String("repository", "chat")))
 	chatHandler := chat.NewChatHandler(registeredProviders, chatRepository)
 
+	messageRepository := messages.NewMessageRepository(db, logger.With(zap.String("repository", "message")))
+	messageHandler := messages.NewMessageHandler(messageRepository, chatRepository)
+
 	jwtConfig := &middleware.JWTConfig{
 		JWKSUrl: jwkUrl,
 	}
@@ -102,7 +106,7 @@ func _main() error {
 		return fmt.Errorf("translator for 'en' not found")
 	}
 
-	engine, err := router.SetupRouter(en_translator, jwtConfig, profileRepository, chatHandler, profileHandler)
+	engine, err := router.SetupRouter(en_translator, jwtConfig, profileRepository, chatHandler, profileHandler, messageHandler)
 	if err != nil {
 		return err
 	}

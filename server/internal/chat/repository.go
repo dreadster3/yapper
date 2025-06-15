@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/dreadster3/yapper/server/internal/profile"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
@@ -29,7 +30,7 @@ func (c chat) ToModel() *Chat {
 	return &Chat{
 		Id:        ChatId(c.Id.Hex()),
 		Name:      c.Name,
-		ProfileId: profile.ProfileId(c.Id.Hex()),
+		ProfileId: profile.ProfileId(c.ProfileId.Hex()),
 	}
 }
 
@@ -84,7 +85,17 @@ func (r *chatRepository) Create(ctx context.Context, chat *Chat) error {
 }
 
 func (r *chatRepository) FindById(ctx context.Context, id ChatId) (*Chat, error) {
-	return nil, errors.New("not implemented") // TODO: Implement
+	objId, err := primitive.ObjectIDFromHex(string(id))
+	if err != nil {
+		return nil, err
+	}
+
+	var chat *chat
+	if err := r.Collection().FindOne(ctx, bson.M{"_id": objId}).Decode(&chat); err != nil {
+		return nil, err
+	}
+
+	return chat.ToModel(), nil
 }
 
 type repositoryMiddleware func(ChatRepository) ChatRepository
@@ -103,17 +114,17 @@ func NewLoggingMiddleware(logger *zap.Logger) repositoryMiddleware {
 	}
 }
 
-func (m *loggingMiddleware) Create(ctx context.Context, chat *Chat) error {
+func (m *loggingMiddleware) Create(ctx context.Context, chat *Chat) (err error) {
 	defer func() {
-		m.logger.Debug("Create", zap.Object("chat", chat))
+		m.logger.Debug("Create", zap.Object("chat", chat), zap.Error(err))
 	}()
 
 	return m.next.Create(ctx, chat)
 }
 
-func (m *loggingMiddleware) FindById(ctx context.Context, id ChatId) (*Chat, error) {
+func (m *loggingMiddleware) FindById(ctx context.Context, id ChatId) (chat *Chat, err error) {
 	defer func() {
-		m.logger.Debug("FindById", zap.String("id", string(id)))
+		m.logger.Debug("FindById", zap.String("id", string(id)), zap.Object("chat", chat), zap.Error(err))
 	}()
 
 	return m.next.FindById(ctx, id)
