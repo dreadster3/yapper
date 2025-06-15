@@ -1,4 +1,4 @@
-package chat
+package chats
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/dreadster3/yapper/server/internal/platform/providers"
-	"github.com/dreadster3/yapper/server/internal/profile"
+	"github.com/dreadster3/yapper/server/internal/profiles"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -84,7 +84,7 @@ func (ch *chatHandler) Create(c *gin.Context) {
 		return
 	}
 
-	profile := profile.GetProfileFromContext(c)
+	profile := profiles.GetProfileFromContext(c)
 	chat.ProfileId = profile.Id
 
 	ctx := c.Request.Context()

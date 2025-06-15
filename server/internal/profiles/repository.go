@@ -1,10 +1,11 @@
-package profile
+package profiles
 
 import (
 	"context"
 	"errors"
 	"fmt"
 
+	"github.com/dreadster3/yapper/server/internal/domain"
 	"github.com/dreadster3/yapper/server/internal/platform/auth"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -18,7 +19,7 @@ var (
 )
 
 type ProfileRepository interface {
-	FindById(ctx context.Context, id ProfileId) (*Profile, error)
+	FindById(ctx context.Context, id domain.ProfileId) (*Profile, error)
 	FindByUserId(ctx context.Context, userId auth.UserId) (*Profile, error)
 	Create(ctx context.Context, profile *Profile) error
 }
@@ -35,7 +36,7 @@ type profileEntity struct {
 
 func (p profileEntity) ToModel() *Profile {
 	return &Profile{
-		Id:     ProfileId(p.Id.Hex()),
+		Id:     domain.ProfileId(p.Id.Hex()),
 		Name:   p.Name,
 		UserId: auth.UserId(p.UserId),
 	}
@@ -71,7 +72,7 @@ func (r *profileRepository) Collection() *mongo.Collection {
 	return r.db.Collection(collection)
 }
 
-func (r *profileRepository) FindById(ctx context.Context, id ProfileId) (*Profile, error) {
+func (r *profileRepository) FindById(ctx context.Context, id domain.ProfileId) (*Profile, error) {
 	return nil, errors.New("not implemented") // TODO: Implement
 }
 
@@ -100,7 +101,7 @@ func (r *profileRepository) Create(ctx context.Context, profile *Profile) error 
 			return fmt.Errorf("repository.Create: %w", err)
 		}
 
-		profile.Id = ProfileId(result.InsertedID.(primitive.ObjectID).Hex())
+		profile.Id = domain.ProfileId(result.InsertedID.(primitive.ObjectID).Hex())
 		return nil
 	}
 
@@ -123,7 +124,7 @@ func NewLoggingMiddleware(logger *zap.Logger) repositoryMiddleware {
 	}
 }
 
-func (m *loggingMiddleware) FindById(ctx context.Context, id ProfileId) (profile *Profile, err error) {
+func (m *loggingMiddleware) FindById(ctx context.Context, id domain.ProfileId) (profile *Profile, err error) {
 	defer func() {
 		m.logger.Debug("FindById", zap.String("id", string(id)), zap.Object("profile", profile), zap.Error(err))
 	}()

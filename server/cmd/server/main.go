@@ -9,13 +9,14 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/dreadster3/yapper/server/internal/chat"
+	"github.com/dreadster3/yapper/server/internal/chats"
 	"github.com/dreadster3/yapper/server/internal/messages"
 	"github.com/dreadster3/yapper/server/internal/platform/database"
 	"github.com/dreadster3/yapper/server/internal/platform/providers"
 	"github.com/dreadster3/yapper/server/internal/platform/router"
 	"github.com/dreadster3/yapper/server/internal/platform/router/middleware"
-	"github.com/dreadster3/yapper/server/internal/profile"
+	"github.com/dreadster3/yapper/server/internal/profiles"
+	"github.com/dreadster3/yapper/server/internal/steps"
 	"github.com/gin-gonic/gin/binding"
 	en_locale "github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
@@ -82,19 +83,20 @@ func _main() error {
 	}
 	defer closeDatabase(ctx)
 
-	profileRepository := profile.NewProfileRepository(db, logger.With(zap.String("repository", "profile")))
-	profileHandler := profile.NewProfileHandler(profileRepository)
+	profileRepository := profiles.NewProfileRepository(db, logger.With(zap.String("repository", "profile")))
+	profileHandler := profiles.NewProfileHandler(profileRepository)
 
-	registeredProviders, err := providers.SetupProviders("http://localhost:11434")
+	registeredProviders, err := providers.SetupProviders("http://localhost:11434", logger)
 	if err != nil {
 		return err
 	}
 
-	chatRepository := chat.NewChatRepository(db, logger.With(zap.String("repository", "chat")))
-	chatHandler := chat.NewChatHandler(registeredProviders, chatRepository)
+	chatRepository := chats.NewChatRepository(db, logger.With(zap.String("repository", "chat")))
+	chatHandler := chats.NewChatHandler(registeredProviders, chatRepository)
 
+	stepsRepository := steps.NewStepRepository(db, logger.With(zap.String("repository", "step")))
 	messageRepository := messages.NewMessageRepository(db, logger.With(zap.String("repository", "message")))
-	messageHandler := messages.NewMessageHandler(messageRepository, chatRepository)
+	messageHandler := messages.NewMessageHandler(messageRepository, chatRepository, stepsRepository, registeredProviders)
 
 	jwtConfig := &middleware.JWTConfig{
 		JWKSUrl: jwkUrl,

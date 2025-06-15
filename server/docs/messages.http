@@ -1,4 +1,6 @@
 ### Send message
+# @curl-no-buffer
+# @accept chunked
 POST http://localhost:8000/api/v1/chats/684e11c5f289b30262c27127/messages
 Content-Type: application/json
 Accept: text/event-stream
@@ -8,6 +10,5 @@ Authorization: Bearer {{$auth.token("dev")}}
 {
     "provider": "ollama",
     "model": "deepseek-r1:1.5b",
-    "role": "user",
-    "content": "Give me 10 fun fact about cats"
+    "content": "What was your though process for the last question?"
 }

@@ -1,15 +1,22 @@
 package router
 
 import (
-	"github.com/dreadster3/yapper/server/internal/chat"
+	"github.com/dreadster3/yapper/server/internal/chats"
 	"github.com/dreadster3/yapper/server/internal/messages"
 	"github.com/dreadster3/yapper/server/internal/platform/router/middleware"
-	"github.com/dreadster3/yapper/server/internal/profile"
+	"github.com/dreadster3/yapper/server/internal/profiles"
 	"github.com/gin-gonic/gin"
 	ut "github.com/go-playground/universal-translator"
 )
 
-func SetupRouter(translator ut.Translator, jwtConfig *middleware.JWTConfig, profileRepository profile.ProfileRepository, chatHandler chat.ChatHandler, profileHandler profile.ProfileHandler, messageHandler messages.MessageHandler) (*gin.Engine, error) {
+func SetupRouter(
+	translator ut.Translator,
+	jwtConfig *middleware.JWTConfig,
+	profileRepository profiles.ProfileRepository,
+	chatHandler chats.ChatHandler,
+	profileHandler profiles.ProfileHandler,
+	messageHandler messages.MessageHandler,
+) (*gin.Engine, error) {
 	engine := gin.Default()
 	engine.Use(middleware.ErrorMiddleware(translator))
 
@@ -18,7 +25,7 @@ func SetupRouter(translator ut.Translator, jwtConfig *middleware.JWTConfig, prof
 		return nil, err
 	}
 
-	profileMiddleware := profile.InjectProfileMiddleware(profileRepository)
+	profileMiddleware := profiles.InjectProfileMiddleware(profileRepository)
 	v1 := engine.Group("/api/v1", jwtMiddleware.Middleware())
 	{
 		chatRoutes := v1.Group("/chats", profileMiddleware)

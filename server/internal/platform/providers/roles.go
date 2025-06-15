@@ -33,3 +33,10 @@ func (r Role) String() string {
 		return "user"
 	}
 }
+
+type MessageType int
+
+const (
+	MessageTypeNormal = iota
+	MessageTypeThinking
+)

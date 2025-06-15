@@ -1,10 +1,10 @@
-package chat
+package chats
 
 import (
 	"context"
 	"errors"
 
-	"github.com/dreadster3/yapper/server/internal/profile"
+	"github.com/dreadster3/yapper/server/internal/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -30,7 +30,7 @@ func (c chat) ToModel() *Chat {
 	return &Chat{
 		Id:        ChatId(c.Id.Hex()),
 		Name:      c.Name,
-		ProfileId: profile.ProfileId(c.ProfileId.Hex()),
+		ProfileId: domain.ProfileId(c.ProfileId.Hex()),
 	}
 }
 

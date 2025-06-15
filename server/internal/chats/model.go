@@ -1,7 +1,7 @@
-package chat
+package chats
 
 import (
-	"github.com/dreadster3/yapper/server/internal/profile"
+	"github.com/dreadster3/yapper/server/internal/domain"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -20,9 +20,9 @@ type ChatMessage struct {
 type ChatId string
 
 type Chat struct {
-	Id        ChatId            `json:"id" binding:"-"`
-	ProfileId profile.ProfileId `json:"-" binding:"-"`
-	Name      string            `json:"name" binding:"required"`
+	Id        ChatId           `json:"id" binding:"-"`
+	ProfileId domain.ProfileId `json:"-" binding:"-"`
+	Name      string           `json:"name" binding:"required"`
 }
 
 func (c Chat) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
