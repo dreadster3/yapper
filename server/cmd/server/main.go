@@ -89,7 +89,8 @@ func _main() error {
 		return err
 	}
 
-	chatHandler := chat.NewChatHandler(registeredProviders)
+	chatRepository := chat.NewChatRepository(db, logger.With(zap.String("repository", "chat")))
+	chatHandler := chat.NewChatHandler(registeredProviders, chatRepository)
 
 	jwtConfig := &middleware.JWTConfig{
 		JWKSUrl: jwkUrl,
@@ -101,7 +102,7 @@ func _main() error {
 		return fmt.Errorf("translator for 'en' not found")
 	}
 
-	engine, err := router.SetupRouter(en_translator, jwtConfig, chatHandler, profileHandler)
+	engine, err := router.SetupRouter(en_translator, jwtConfig, profileRepository, chatHandler, profileHandler)
 	if err != nil {
 		return err
 	}

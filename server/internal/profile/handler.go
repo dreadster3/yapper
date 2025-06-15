@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/dreadster3/yapper/server/internal/platform/router/middleware"
+	"github.com/dreadster3/yapper/server/internal/platform/auth"
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,7 +31,7 @@ func (h *profileHandler) Create(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	profile.UserId = UserId(c.GetString(middleware.UserIdContextKey))
+	profile.UserId = auth.GetUserIdFromContext(c)
 
 	if err := h.repository.Create(ctx, profile); err != nil {
 		if errors.Is(err, ErrProfileAlreadyCreated) {

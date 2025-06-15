@@ -1,16 +1,16 @@
 package profile
 
-import "go.uber.org/zap/zapcore"
-
-type (
-	ProfileId string
-	UserId    string
+import (
+	"github.com/dreadster3/yapper/server/internal/platform/auth"
+	"go.uber.org/zap/zapcore"
 )
 
+type ProfileId string
+
 type Profile struct {
-	Id     ProfileId `json:"id" binding:"-"`
-	Name   string    `json:"name" binding:"required"`
-	UserId UserId    `json:"-"`
+	Id     ProfileId   `json:"id" binding:"-"`
+	Name   string      `json:"name" binding:"required"`
+	UserId auth.UserId `json:"-"`
 }
 
 func (p Profile) MarshalLogObject(encoder zapcore.ObjectEncoder) error {

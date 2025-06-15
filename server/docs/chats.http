@@ -1,3 +1,4 @@
+### Stream Chat
 # @curl-no-buffer
 # @accept chunked
 POST http://localhost:8000/api/v1/chats/stream
@@ -23,4 +24,13 @@ Authorization: Bearer {{$auth.token("dev")}}
             "content": "Give me 10 fun fact about cats"
         }
     ]
+}
+
+### Create Chat
+POST http://localhost:8000/api/v1/chats
+Content-Type: application/json
+Authorization: Bearer {{$auth.token("dev")}}
+
+{
+    "name": "cats"
 }

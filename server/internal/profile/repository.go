@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/dreadster3/yapper/server/internal/platform/auth"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -18,7 +19,7 @@ var (
 
 type ProfileRepository interface {
 	FindById(ctx context.Context, id ProfileId) (*Profile, error)
-	FindByUserId(ctx context.Context, userId UserId) (*Profile, error)
+	FindByUserId(ctx context.Context, userId auth.UserId) (*Profile, error)
 	Create(ctx context.Context, profile *Profile) error
 }
 
@@ -36,7 +37,7 @@ func (p profileEntity) ToModel() *Profile {
 	return &Profile{
 		Id:     ProfileId(p.Id.Hex()),
 		Name:   p.Name,
-		UserId: UserId(p.UserId),
+		UserId: auth.UserId(p.UserId),
 	}
 }
 
@@ -53,28 +54,28 @@ func fromModel(p *Profile) *profileEntity {
 	}
 }
 
-type repository struct {
+type profileRepository struct {
 	db *mongo.Database
 }
 
 func NewProfileRepository(db *mongo.Database, logger *zap.Logger) ProfileRepository {
 	var repo ProfileRepository
 
-	repo = &repository{db: db}
+	repo = &profileRepository{db: db}
 	repo = NewLoggingMiddleware(logger)(repo)
 
 	return repo
 }
 
-func (r *repository) Collection() *mongo.Collection {
+func (r *profileRepository) Collection() *mongo.Collection {
 	return r.db.Collection(collection)
 }
 
-func (r *repository) FindById(ctx context.Context, id ProfileId) (*Profile, error) {
+func (r *profileRepository) FindById(ctx context.Context, id ProfileId) (*Profile, error) {
 	return nil, errors.New("not implemented") // TODO: Implement
 }
 
-func (r *repository) FindByUserId(ctx context.Context, userId UserId) (*Profile, error) {
+func (r *profileRepository) FindByUserId(ctx context.Context, userId auth.UserId) (*Profile, error) {
 	var entity profileEntity
 	if err := r.Collection().FindOne(ctx, bson.M{"user_id": userId}).Decode(&entity); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
@@ -87,7 +88,7 @@ func (r *repository) FindByUserId(ctx context.Context, userId UserId) (*Profile,
 	return entity.ToModel(), nil
 }
 
-func (r *repository) Create(ctx context.Context, profile *Profile) error {
+func (r *profileRepository) Create(ctx context.Context, profile *Profile) error {
 	if _, err := r.FindByUserId(ctx, profile.UserId); err != nil {
 		if !errors.Is(err, ErrProfileNotFound) {
 			return err
@@ -130,7 +131,7 @@ func (m *loggingMiddleware) FindById(ctx context.Context, id ProfileId) (profile
 	return m.next.FindById(ctx, id)
 }
 
-func (m *loggingMiddleware) FindByUserId(ctx context.Context, userId UserId) (profile *Profile, err error) {
+func (m *loggingMiddleware) FindByUserId(ctx context.Context, userId auth.UserId) (profile *Profile, err error) {
 	defer func() {
 		m.logger.Debug("FindByUserId", zap.String("user_id", string(userId)), zap.Object("profile", profile), zap.Error(err))
 	}()

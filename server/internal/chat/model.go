@@ -1,8 +1,13 @@
 package chat
 
+import (
+	"github.com/dreadster3/yapper/server/internal/profile"
+	"go.uber.org/zap/zapcore"
+)
+
 type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+	Role    string `json:"role" binding:"required"`
+	Content string `json:"content" binding:"required"`
 }
 
 type ChatMessage struct {
@@ -12,7 +17,17 @@ type ChatMessage struct {
 	Think    bool      `json:"think"`
 }
 
+type ChatId string
+
 type Chat struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	Id        ChatId            `json:"id" binding:"-"`
+	ProfileId profile.ProfileId `json:"-" binding:"-"`
+	Name      string            `json:"name" binding:"required"`
+}
+
+func (c Chat) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	encoder.AddString("id", string(c.Id))
+	encoder.AddString("profile_id", string(c.ProfileId))
+	encoder.AddString("name", c.Name)
+	return nil
 }

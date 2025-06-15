@@ -5,13 +5,10 @@ import (
 	"github.com/dreadster3/yapper/server/internal/platform/router/middleware"
 	"github.com/dreadster3/yapper/server/internal/profile"
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 	ut "github.com/go-playground/universal-translator"
 )
 
-func SetupRouter(translator ut.Translator, jwtConfig *middleware.JWTConfig, chatHandler chat.ChatHandler, profileHandler profile.ProfileHandler) (*gin.Engine, error) {
-	binding.EnableDecoderDisallowUnknownFields = true
-
+func SetupRouter(translator ut.Translator, jwtConfig *middleware.JWTConfig, profileRepository profile.ProfileRepository, chatHandler chat.ChatHandler, profileHandler profile.ProfileHandler) (*gin.Engine, error) {
 	engine := gin.Default()
 	engine.Use(middleware.ErrorMiddleware(translator))
 
@@ -20,9 +17,10 @@ func SetupRouter(translator ut.Translator, jwtConfig *middleware.JWTConfig, chat
 		return nil, err
 	}
 
+	profileMiddleware := profile.InjectProfileMiddleware(profileRepository)
 	v1 := engine.Group("/api/v1", jwtMiddleware.Middleware())
 	{
-		chatRoutes := v1.Group("/chats")
+		chatRoutes := v1.Group("/chats", profileMiddleware)
 		chatRoutes.POST("", chatHandler.Create)
 		chatRoutes.POST("/stream", chatHandler.Stream)
 

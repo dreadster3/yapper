@@ -6,13 +6,9 @@ import (
 	"strings"
 
 	"github.com/MicahParks/keyfunc/v3"
+	"github.com/dreadster3/yapper/server/internal/platform/auth"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-)
-
-const (
-	UserIdContextKey     = "user_id"
-	UserClaimsContextKey = "user_claims"
 )
 
 type JWTMiddleware struct {
@@ -87,8 +83,8 @@ func (m *JWTMiddleware) Middleware() gin.HandlerFunc {
 			}
 		}
 
-		c.Set(UserIdContextKey, claims["sub"])
-		c.Set(UserClaimsContextKey, claims)
+		c.Set(auth.UserIdContextKey, claims["sub"])
+		c.Set(auth.UserClaimsContextKey, claims)
 		c.Next()
 	}
 }
