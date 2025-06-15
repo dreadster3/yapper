@@ -30,7 +30,6 @@ func SetupRouter(
 	{
 		chatRoutes := v1.Group("/chats", profileMiddleware)
 		chatRoutes.POST("", chatHandler.Create)
-		chatRoutes.POST("/stream", chatHandler.Stream)
 
 		messagesRoutes := chatRoutes.Group("/:chat_id/messages")
 		messagesRoutes.POST("", messageHandler.SendMessage)

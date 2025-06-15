@@ -120,6 +120,10 @@ func (h *messageHandler) SendMessage(c *gin.Context) {
 		Content:   "",
 		Status:    steps.StepStatusPending,
 	}
+	if err := h.stepsRepository.Create(ctx, step); err != nil {
+		c.Error(err)
+		return
+	}
 
 	c.Stream(func(w io.Writer) bool {
 		provider.Chat(ctx, message.Model, providerMessages, func(m providers.Message) error {
@@ -150,7 +154,8 @@ func (h *messageHandler) SendMessage(c *gin.Context) {
 		return false
 	})
 
-	if err := h.stepsRepository.Create(ctx, step); err != nil {
+	step.Status = steps.StepStatusDone
+	if err := h.stepsRepository.Update(ctx, step); err != nil {
 		c.Error(err)
 		return
 	}

@@ -10,5 +10,5 @@ Authorization: Bearer {{$auth.token("dev")}}
 {
     "provider": "ollama",
     "model": "deepseek-r1:1.5b",
-    "content": "What was your though process for the last question?"
+    "content": "Tell me 10 fun facts about cats"
 }

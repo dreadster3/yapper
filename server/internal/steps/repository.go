@@ -15,6 +15,7 @@ import (
 type StepRepository interface {
 	GetByMessageId(ctx context.Context, messageId domain.MessageId) ([]*Step, error)
 	Create(ctx context.Context, step *Step) error
+	Update(ctx context.Context, step *Step) error
 }
 
 const collectionName = "steps"
@@ -110,6 +111,19 @@ func (r *stepRepository) Create(ctx context.Context, step *Step) error {
 	return nil
 }
 
+func (r *stepRepository) Update(ctx context.Context, step *Step) error {
+	entity, err := fromModel(step)
+	if err != nil {
+		return err
+	}
+
+	if _, err := r.Collection().UpdateByID(ctx, entity.Id, bson.M{"$set": entity}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 type repositoryMiddleware func(StepRepository) StepRepository
 
 type loggingMiddleware struct {
@@ -140,4 +154,12 @@ func (m *loggingMiddleware) Create(ctx context.Context, step *Step) (err error) 
 	}()
 
 	return m.next.Create(ctx, step)
+}
+
+func (m *loggingMiddleware) Update(ctx context.Context, step *Step) (err error) {
+	defer func() {
+		m.logger.Debug("Update", zap.Object("step", step), zap.Error(err))
+	}()
+
+	return m.next.Update(ctx, step)
 }
