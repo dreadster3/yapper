@@ -1,0 +1,14 @@
+### Send message
+# @curl-no-buffer
+# @accept chunked
+POST http://localhost:8000/api/v1/chats/684e11c5f289b30262c27127/messages
+Content-Type: application/json
+Accept: text/event-stream
+Cache-Control: no-cache
+Authorization: Bearer {{$auth.token("dev")}}
+
+{
+    "provider": "ollama",
+    "model": "deepseek-r1:1.5b",
+    "content": "Tell me 10 fun facts about cats"
+}
