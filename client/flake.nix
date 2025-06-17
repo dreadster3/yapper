@@ -26,7 +26,8 @@
         packages.default = pkgs.hello;
 
         # Dev shells
-        devShells.default = pkgs.mkShell { buildInputs = with pkgs; [ pnpm ]; };
+        devShells.default =
+          pkgs.mkShell { buildInputs = with pkgs; [ pnpm nodejs prettier ]; };
       };
       flake = {
         # The usual flake attributes can be defined here, including system-
